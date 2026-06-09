@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import os
-from pathlib import Path
 
 from .config import CONFIG_DIR
 
@@ -70,7 +69,7 @@ PROFILES_FILE = CONFIG_DIR / "profiles.toml"
 def _toml_string(val: str) -> str:
     """Return a TOML-safe quoted string."""
     if "\n" in val or '"' in val:
-        escaped = val.replace("\\", "\\\\").replace('"""', '\\"""')
+        escaped = val.replace("\\", "\\\\").replace('"""', '""""')
         return f'"""{escaped}"""'
     return f'"{val}"'
 

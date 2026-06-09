@@ -60,10 +60,7 @@ def _save_var_to_file(path: Path, var_name: str, value: str) -> None:
     new_lines = []
     for line in lines:
         stripped = line.strip()
-        if stripped.startswith(f"{var_name}=") and not stripped.startswith("#"):
-            new_lines.append(f"{var_name}={value}")
-            found = True
-        elif stripped.startswith(f"#{var_name}="):
+        if stripped.startswith(f"{var_name}=") and not stripped.startswith("#") or stripped.startswith(f"#{var_name}="):
             new_lines.append(f"{var_name}={value}")
             found = True
         else:

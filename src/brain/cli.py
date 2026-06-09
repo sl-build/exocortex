@@ -5,21 +5,30 @@ from __future__ import annotations
 import argparse
 import sys
 
-from .errors import BrainError, InputError, APIError, BadResponseError, SUCCESS, API_FAILURE, BAD_RESPONSE, INPUT_ERROR
 from .commands import (
-    cmd_think,
-    cmd_key,
-    cmd_key_set,
-    cmd_profiles,
     cmd_config,
     cmd_config_set,
+    cmd_key,
+    cmd_key_set,
     cmd_profile_add,
     cmd_profile_remove,
     cmd_profile_show,
+    cmd_profiles,
+    cmd_think,
+)
+from .depth import VALID_DEPTHS
+from .errors import (
+    API_FAILURE,
+    BAD_RESPONSE,
+    INPUT_ERROR,
+    SUCCESS,
+    APIError,
+    BadResponseError,
+    BrainError,
+    InputError,
 )
 from .keys import VALID_PROVIDERS
 from .profiles import get_valid_profile_names
-from .depth import VALID_DEPTHS
 
 DEFAULT_MAX_TOKENS = 16384
 
@@ -35,29 +44,46 @@ def build_parser() -> argparse.ArgumentParser:
     # ── think ──
     think_parser = subparsers.add_parser("think", help="Send a prompt to the reasoning engine")
     think_parser.add_argument("prompt", help="The prompt/question to think about")
-    think_parser.add_argument("--provider", choices=VALID_PROVIDERS,
-                              help="Provider: openrouter|opencode_go")
-    think_parser.add_argument("--model", "-m", default=None,
-                              help="Model ID (default: from config or provider default)")
-    think_parser.add_argument("--profile", "-p", choices=get_valid_profile_names(),
-                              help="Reasoning profile (see: brain profiles)")
+    think_parser.add_argument(
+        "--provider", choices=VALID_PROVIDERS, help="Provider: openrouter|opencode_go"
+    )
+    think_parser.add_argument(
+        "--model", "-m", default=None, help="Model ID (default: from config or provider default)"
+    )
+    think_parser.add_argument(
+        "--profile",
+        "-p",
+        choices=get_valid_profile_names(),
+        help="Reasoning profile (see: brain profiles)",
+    )
     think_parser.add_argument("--context", "-c", help="Inline context to include")
     think_parser.add_argument("--context-file", "-f", help="File with context to include")
-    think_parser.add_argument("--stdin-context", "-s", action="store_true",
-                              help="Read context from stdin")
-    think_parser.add_argument("--metadata", "-M", action="append",
-                              help="Metadata key=value pairs (repeatable)")
-    think_parser.add_argument("--depth", "-d", choices=VALID_DEPTHS,
-                              help="Reasoning depth: quick|normal|deep|exhaustive")
-    think_parser.add_argument("--max-tokens", "-t", type=int, default=DEFAULT_MAX_TOKENS,
-                              help=f"Max output tokens (default: {DEFAULT_MAX_TOKENS})")
+    think_parser.add_argument(
+        "--stdin-context", "-s", action="store_true", help="Read context from stdin"
+    )
+    think_parser.add_argument(
+        "--metadata", "-M", action="append", help="Metadata key=value pairs (repeatable)"
+    )
+    think_parser.add_argument(
+        "--depth", "-d", choices=VALID_DEPTHS, help="Reasoning depth: quick|normal|deep|exhaustive"
+    )
+    think_parser.add_argument(
+        "--max-tokens",
+        "-t",
+        type=int,
+        default=None,
+        help=f"Max output tokens (default: {DEFAULT_MAX_TOKENS})",
+    )
     think_parser.add_argument("--temperature", type=float, help="Override temperature")
-    think_parser.add_argument("--raw", "-r", action="store_true",
-                              help="Raw mode: no system prompt, just user message")
-    think_parser.add_argument("--json", "-j", action="store_true",
-                              help="Strip code fences, output clean JSON")
-    think_parser.add_argument("--stats", action="store_true",
-                              help="Show usage statistics on stderr")
+    think_parser.add_argument(
+        "--raw", "-r", action="store_true", help="Raw mode: no system prompt, just user message"
+    )
+    think_parser.add_argument(
+        "--json", "-j", action="store_true", help="Strip code fences, output clean JSON"
+    )
+    think_parser.add_argument(
+        "--stats", action="store_true", help="Show usage statistics on stderr"
+    )
 
     # ── key ──
     subparsers.add_parser("key", help="Show key location or set a new key")
@@ -73,13 +99,17 @@ def build_parser() -> argparse.ArgumentParser:
     profile_add_parser = subparsers.add_parser("profile-add", help="Add a custom reasoning profile")
     profile_add_parser.add_argument("name", help="Profile name")
     profile_add_parser.add_argument("--prompt", required=True, help="System prompt")
-    profile_add_parser.add_argument("--depth", choices=VALID_DEPTHS, default="normal",
-                                      help="Default depth (default: normal)")
-    profile_add_parser.add_argument("--temp", type=float, default=0.3,
-                                      help="Default temperature (default: 0.3)")
+    profile_add_parser.add_argument(
+        "--depth", choices=VALID_DEPTHS, default="normal", help="Default depth (default: normal)"
+    )
+    profile_add_parser.add_argument(
+        "--temp", type=float, default=0.3, help="Default temperature (default: 0.3)"
+    )
 
     # ── profile-remove ──
-    profile_remove_parser = subparsers.add_parser("profile-remove", help="Remove a custom reasoning profile")
+    profile_remove_parser = subparsers.add_parser(
+        "profile-remove", help="Remove a custom reasoning profile"
+    )
     profile_remove_parser.add_argument("name", help="Profile name")
 
     # ── profile-show ──

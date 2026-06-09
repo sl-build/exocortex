@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import sys
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 
 # Cost table per 1M tokens (input / output)
 COST_PER_1M_TOKENS: dict[str, dict[str, float]] = {

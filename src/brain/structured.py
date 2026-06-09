@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import json
-import re
 
 
 def strip_code_fences(text: str) -> str:

@@ -2,22 +2,21 @@
 
 from __future__ import annotations
 
-import sys
-
 from .client import call_and_print
+from .config import get_default_model as get_config_model
+from .config import get_default_provider, load_config, save_config
 from .context import build_context_block
+from .depth import VALID_DEPTHS
 from .errors import InputError
-from .keys import get_api_key, set_api_key, find_key_source, PROFILE_ENV, VALID_PROVIDERS
+from .keys import PROFILE_ENV, VALID_PROVIDERS, find_key_source, set_api_key
 from .profiles import (
     PROFILE_PROMPTS,
-    get_all_profiles,
-    get_valid_profile_names,
-    get_profile_details,
     add_profile,
+    get_all_profiles,
+    get_profile_details,
+    get_valid_profile_names,
     remove_profile,
 )
-from .depth import VALID_DEPTHS
-from .config import load_config, save_config, get_default_provider, get_default_model as get_config_model
 
 
 def cmd_think(
@@ -31,7 +30,7 @@ def cmd_think(
     stdin_context: bool = False,
     metadata: list[str] | None = None,
     depth: str | None = None,
-    max_tokens: int = 16384,
+    max_tokens: int | None = None,
     temperature: float | None = None,
     raw: bool = False,
     json_output: bool = False,
@@ -78,15 +77,12 @@ def cmd_key() -> None:
     source = find_key_source(config["provider"])
     if source is None:
         print("No key found. Use: brain key-set <key_value>")
-        print("Or set interactively: brain think \"hello\"")
+        print('Or set interactively: brain think "hello"')
         print(f"Or edit: {PROFILE_ENV}")
         return
 
     key, path = source
-    if len(key) > 12:
-        masked = key[:8] + "..." + key[-4:]
-    else:
-        masked = "***"
+    masked = key[:8] + "..." + key[-4:] if len(key) > 12 else "***"
 
     if path:
         print(f"Found in {path}: {masked}")
@@ -98,8 +94,7 @@ def cmd_key_set(key_value: str) -> None:
     """Handle the 'key-set' subcommand — save API key."""
     key_value = key_value.strip()
     if not key_value:
-        print("Empty key. Aborting.", file=sys.stderr)
-        sys.exit(1)
+        raise InputError("Empty key. Aborting.")
 
     config = load_config()
     path = set_api_key(key_value, provider=config["provider"])
@@ -111,7 +106,9 @@ def cmd_profiles() -> str:
     lines = ["Available reasoning profiles:", ""]
     for name, cfg in get_all_profiles().items():
         source = "built-in" if name in PROFILE_PROMPTS else "user"
-        lines.append(f"  {name} ({source}): depth={cfg['default_depth']}, temp={cfg['default_temperature']}")
+        lines.append(
+            f"  {name} ({source}): depth={cfg['default_depth']}, temp={cfg['default_temperature']}"
+        )
         lines.append(f"    {cfg['system_prompt'][:80]}...")
     result = "\n".join(lines)
     print(result)

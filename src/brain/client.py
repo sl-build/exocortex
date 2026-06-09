@@ -2,14 +2,13 @@
 
 from __future__ import annotations
 
-import sys
 import time
 
 from .context import assemble_messages
 from .depth import merge_depth_into_params
 from .errors import APIError, BadResponseError, RetryableError
 from .keys import get_api_key, get_base_url, get_default_model
-from .profiles import PROFILE_PROMPTS
+from .profiles import get_all_profiles
 from .retry import is_retryable, retry_with_backoff
 from .stats import Stats
 
@@ -26,7 +25,7 @@ def _call_api(
     system_prompt: str | None = None,
     context_block: str | None = None,
     depth: str | None = None,
-    max_tokens: int = DEFAULT_MAX_TOKENS,
+    max_tokens: int | None = None,
     temperature: float | None = None,
     raw: bool = False,
     retries: int = 3,
@@ -57,15 +56,16 @@ def _call_api(
         "messages": messages,
     }
 
-    # Apply depth preset only if explicitly provided
+    # Apply depth preset if provided (sets max_tokens from depth config)
     if depth:
         params = merge_depth_into_params(params, depth)
-    else:
-        # v1 backward-compatible defaults
-        params["max_tokens"] = max_tokens
 
-    # Explicit overrides always win
-    params["max_tokens"] = max_tokens
+    # Explicit --max-tokens override wins over everything
+    if max_tokens is not None:
+        params["max_tokens"] = max_tokens
+    elif "max_tokens" not in params:
+        params["max_tokens"] = DEFAULT_MAX_TOKENS
+
     if temperature is not None:
         params["temperature"] = temperature
 
@@ -110,7 +110,7 @@ def call_and_print(
     system_prompt: str | None = None,
     context_block: str | None = None,
     depth: str | None = None,
-    max_tokens: int = DEFAULT_MAX_TOKENS,
+    max_tokens: int | None = None,
     temperature: float | None = None,
     profile: str | None = None,
     raw: bool = False,
@@ -123,8 +123,8 @@ def call_and_print(
     Returns the response text (or JSON string if json_output=True).
     """
     # Apply profile if specified
-    if profile and profile in PROFILE_PROMPTS:
-        prof = PROFILE_PROMPTS[profile]
+    if profile:
+        prof = get_all_profiles()[profile]
         if not system_prompt:
             system_prompt = prof["system_prompt"]
         # Only override depth if user didn't explicitly set one

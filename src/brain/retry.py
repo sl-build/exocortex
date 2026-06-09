@@ -5,7 +5,7 @@ from __future__ import annotations
 import sys
 import time
 
-from .errors import RetryableError, APIError
+from .errors import APIError, RetryableError
 
 # Retry on these HTTP status codes
 RETRYABLE_STATUS_CODES = {429, 500, 502, 503, 504}
@@ -26,11 +26,11 @@ def is_retryable(status_code: int | None) -> bool:
 
 
 def calculate_delay(attempt: int) -> float:
-    """Calculate exponential backoff delay with jitter.
+    """Calculate exponential backoff delay.
 
     attempt is 0-indexed.
     """
-    delay = min(BASE_DELAY * (2 ** attempt), MAX_DELAY)
+    delay = min(BASE_DELAY * (2**attempt), MAX_DELAY)
     return delay
 
 
@@ -50,13 +50,11 @@ def retry_with_backoff(func, *args, max_retries: int = MAX_RETRIES, **kwargs):
     Returns the result of func on success.
     Raises APIError after all retries exhausted.
     """
-    last_error = None
 
     for attempt in range(max_retries + 1):
         try:
             return func(*args, **kwargs)
         except RetryableError as e:
-            last_error = e
             if attempt < max_retries:
                 delay = calculate_delay(attempt)
                 log_retry(attempt + 1, max_retries + 1, e.status_code, delay)
