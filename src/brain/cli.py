@@ -6,9 +6,19 @@ import argparse
 import sys
 
 from .errors import BrainError, InputError, APIError, BadResponseError, SUCCESS, API_FAILURE, BAD_RESPONSE, INPUT_ERROR
-from .commands import cmd_think, cmd_key, cmd_key_set, cmd_profiles, cmd_config, cmd_config_set
+from .commands import (
+    cmd_think,
+    cmd_key,
+    cmd_key_set,
+    cmd_profiles,
+    cmd_config,
+    cmd_config_set,
+    cmd_profile_add,
+    cmd_profile_remove,
+    cmd_profile_show,
+)
 from .keys import VALID_PROVIDERS
-from .profiles import VALID_PROFILES
+from .profiles import get_valid_profile_names
 from .depth import VALID_DEPTHS
 
 DEFAULT_MAX_TOKENS = 16384
@@ -29,8 +39,8 @@ def build_parser() -> argparse.ArgumentParser:
                               help="Provider: openrouter|opencode_go")
     think_parser.add_argument("--model", "-m", default=None,
                               help="Model ID (default: from config or provider default)")
-    think_parser.add_argument("--profile", "-p", choices=VALID_PROFILES,
-                              help="Reasoning profile: reasoning|critic|planner|judge|extractor")
+    think_parser.add_argument("--profile", "-p", choices=get_valid_profile_names(),
+                              help="Reasoning profile (see: brain profiles)")
     think_parser.add_argument("--context", "-c", help="Inline context to include")
     think_parser.add_argument("--context-file", "-f", help="File with context to include")
     think_parser.add_argument("--stdin-context", "-s", action="store_true",
@@ -58,6 +68,23 @@ def build_parser() -> argparse.ArgumentParser:
 
     # ── profiles ──
     subparsers.add_parser("profiles", help="List available reasoning profiles")
+
+    # ── profile-add ──
+    profile_add_parser = subparsers.add_parser("profile-add", help="Add a custom reasoning profile")
+    profile_add_parser.add_argument("name", help="Profile name")
+    profile_add_parser.add_argument("--prompt", required=True, help="System prompt")
+    profile_add_parser.add_argument("--depth", choices=VALID_DEPTHS, default="normal",
+                                      help="Default depth (default: normal)")
+    profile_add_parser.add_argument("--temp", type=float, default=0.3,
+                                      help="Default temperature (default: 0.3)")
+
+    # ── profile-remove ──
+    profile_remove_parser = subparsers.add_parser("profile-remove", help="Remove a custom reasoning profile")
+    profile_remove_parser.add_argument("name", help="Profile name")
+
+    # ── profile-show ──
+    profile_show_parser = subparsers.add_parser("profile-show", help="Show profile details")
+    profile_show_parser.add_argument("name", help="Profile name")
 
     # ── config ──
     subparsers.add_parser("config", help="Show current configuration")
@@ -110,6 +137,23 @@ def main(argv: list[str] | None = None) -> int:
 
         elif args.command == "profiles":
             cmd_profiles()
+            return SUCCESS
+
+        elif args.command == "profile-add":
+            cmd_profile_add(
+                name=args.name,
+                system_prompt=args.prompt,
+                depth=args.depth,
+                temperature=args.temp,
+            )
+            return SUCCESS
+
+        elif args.command == "profile-remove":
+            cmd_profile_remove(args.name)
+            return SUCCESS
+
+        elif args.command == "profile-show":
+            cmd_profile_show(args.name)
             return SUCCESS
 
         elif args.command == "config":

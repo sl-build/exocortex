@@ -8,7 +8,14 @@ from .client import call_and_print
 from .context import build_context_block
 from .errors import InputError
 from .keys import get_api_key, set_api_key, find_key_source, PROFILE_ENV, VALID_PROVIDERS
-from .profiles import VALID_PROFILES, PROFILE_PROMPTS
+from .profiles import (
+    PROFILE_PROMPTS,
+    get_all_profiles,
+    get_valid_profile_names,
+    get_profile_details,
+    add_profile,
+    remove_profile,
+)
 from .depth import VALID_DEPTHS
 from .config import load_config, save_config, get_default_provider, get_default_model as get_config_model
 
@@ -31,8 +38,9 @@ def cmd_think(
     show_stats: bool = False,
 ) -> str:
     """Handle the 'think' subcommand."""
-    if profile and profile not in VALID_PROFILES:
-        raise InputError(f"Unknown profile: {profile}. Valid: {', '.join(VALID_PROFILES)}")
+    valid_profiles = get_valid_profile_names()
+    if profile and profile not in valid_profiles:
+        raise InputError(f"Unknown profile: {profile}. Valid: {', '.join(valid_profiles)}")
 
     if depth and depth not in VALID_DEPTHS:
         raise InputError(f"Unknown depth: {depth}. Valid: {', '.join(VALID_DEPTHS)}")
@@ -101,12 +109,37 @@ def cmd_key_set(key_value: str) -> None:
 def cmd_profiles() -> str:
     """List available reasoning profiles."""
     lines = ["Available reasoning profiles:", ""]
-    for name, cfg in PROFILE_PROMPTS.items():
-        lines.append(f"  {name}: depth={cfg['default_depth']}, temp={cfg['default_temperature']}")
+    for name, cfg in get_all_profiles().items():
+        source = "built-in" if name in PROFILE_PROMPTS else "user"
+        lines.append(f"  {name} ({source}): depth={cfg['default_depth']}, temp={cfg['default_temperature']}")
         lines.append(f"    {cfg['system_prompt'][:80]}...")
     result = "\n".join(lines)
     print(result)
     return result
+
+
+def cmd_profile_add(name: str, system_prompt: str, depth: str, temperature: float) -> None:
+    """Add a user profile."""
+    add_profile(name, system_prompt, depth, temperature)
+    print(f"Added user profile '{name}'")
+
+
+def cmd_profile_remove(name: str) -> None:
+    """Remove a user profile."""
+    remove_profile(name)
+    print(f"Removed user profile '{name}'")
+
+
+def cmd_profile_show(name: str) -> None:
+    """Show profile details."""
+    details = get_profile_details(name)
+    if details is None:
+        raise InputError(f"Unknown profile: {name}")
+    print(f"Profile: {name}")
+    print(f"Source: {details['source']}")
+    print(f"Depth: {details['default_depth']}")
+    print(f"Temperature: {details['default_temperature']}")
+    print(f"System prompt:\n{details['system_prompt']}")
 
 
 def cmd_config() -> None:
