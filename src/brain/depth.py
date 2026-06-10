@@ -1,69 +1,34 @@
-"""Brain CLI v2 — Depth presets mapping to model parameters."""
+"""Brain CLI v3 — Depth presets mapping to model parameters."""
 
 from __future__ import annotations
 
-DEPTH_CONFIGS: dict[str, dict] = {
-    "quick": {
-        "max_output_tokens": 2048,
-        "temperature": 0.2,
-        "reasoning_effort": "low",
-    },
-    "normal": {
-        "max_output_tokens": 8192,
-        "temperature": 0.3,
-        "reasoning_effort": "medium",
-    },
-    "deep": {
-        "max_output_tokens": 16384,
-        "temperature": 0.4,
-        "reasoning_effort": "high",
-    },
-    "exhaustive": {
-        "max_output_tokens": 32768,
-        "temperature": 0.5,
-        "reasoning_effort": "high",
-    },
+DEPTH_PRESETS: dict[str, dict] = {
+    "quick": {"max_tokens": 4096, "reasoning_effort": "low"},
+    "normal": {"max_tokens": 8192, "reasoning_effort": "medium"},
+    "deep": {"max_tokens": 16384, "reasoning_effort": "high"},
+    "exhaustive": {"max_tokens": 32768, "reasoning_effort": "high"},
 }
 
-VALID_DEPTHS = list(DEPTH_CONFIGS.keys())
+VALID_DEPTHS = list(DEPTH_PRESETS.keys())
 
 DEFAULT_DEPTH = "normal"
 
 
 def get_depth_config(depth: str) -> dict:
-    """Return merged config for a depth level."""
-    if depth not in DEPTH_CONFIGS:
+    """Return a copy of the preset for a depth level."""
+    if depth not in DEPTH_PRESETS:
         raise ValueError(f"Unknown depth: {depth}. Valid: {VALID_DEPTHS}")
-    return DEPTH_CONFIGS[depth].copy()
+    return DEPTH_PRESETS[depth].copy()
 
 
-def merge_depth_into_params(
-    params: dict,
-    depth: str,
-    max_tokens_override: int | None = None,
-    temperature_override: float | None = None,
-) -> dict:
-    """Merge depth preset into API call params.
+def merge_depth_into_params(params: dict, depth: str) -> dict:
+    """Merge depth preset max_tokens into API call params.
 
-    Explicit --max-tokens and --temperature override depth defaults.
+    temperature and reasoning_effort are handled at the provider layer.
+    Explicit --max-tokens from CLI is applied in client.py after this call.
     """
     cfg = get_depth_config(depth)
     merged = params.copy()
-
-    # Depth-provided defaults
     if "max_tokens" not in merged:
-        merged["max_tokens"] = cfg["max_output_tokens"]
-    if "temperature" not in merged:
-        merged["temperature"] = cfg["temperature"]
-
-    # Reasoning effort: only set if model supports it (OpenAI o-series)
-    if cfg.get("reasoning_effort"):
-        merged["reasoning_effort"] = cfg["reasoning_effort"]
-
-    # Explicit overrides win over everything
-    if max_tokens_override is not None:
-        merged["max_tokens"] = max_tokens_override
-    if temperature_override is not None:
-        merged["temperature"] = temperature_override
-
+        merged["max_tokens"] = cfg["max_tokens"]
     return merged

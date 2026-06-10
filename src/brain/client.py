@@ -3,12 +3,17 @@
 from __future__ import annotations
 
 from .context import assemble_messages
-from .depth import merge_depth_into_params
+from .depth import get_depth_config, merge_depth_into_params
 from .keys import get_default_model
 from .profiles import get_all_profiles
 from .stats import Stats
 
 DEFAULT_MAX_TOKENS = 16384
+
+
+def _supports_reasoning_effort(model: str) -> bool:
+    """reasoning_effort is OpenAI o-series only."""
+    return any(model.startswith(p) for p in ["o1", "o3", "o4"])
 
 
 def _call_api(
@@ -59,6 +64,12 @@ def _call_api(
 
     if temperature is not None:
         params["temperature"] = temperature
+
+    # reasoning_effort: only for OpenAI o-series models
+    if depth and _supports_reasoning_effort(actual_model):
+        preset = get_depth_config(depth)
+        if "reasoning_effort" in preset:
+            params["reasoning_effort"] = preset["reasoning_effort"]
 
     # raw_model: pass model name as-is, no transformation
     final_model = actual_model if raw_model else actual_model
