@@ -1,7 +1,7 @@
 # WARNING this project is extreme alpha version. Can break you Hermes because of hooks usage. 
 # Brain CLI 
 
-Exocortex reasoning engine for AI agents. Multi-provider LLM gateway with reasoning profiles, depth control, structured output, and plan persistence for Hermes Agent Gate.
+Exocortex reasoning engine for AI agents. Multi-provider LLM gateway with reasoning profiles, depth control, structured JSON output, and plan persistence with step progress injection for Hermes Agent Gate.
 
 ## Install
 
@@ -33,23 +33,34 @@ plugins:
     - brain-tool
 ```
 
-Restart Hermes. The plugin provides three tools (`brain_think`, `brain_plan_done`, `brain_plan_block`) and a `pre_tool_call` gate that blocks action tools (terminal, edit, bash, task) until an active plan exists.
+Restart Hermes. The plugin provides four tools (`brain_think`, `brain_plan_done`, `brain_plan_block`, `brain_plan_status`), a `pre_tool_call` gate that blocks action tools (terminal, edit, bash, task) until an active plan exists, and a `post_receive_message` hook that injects plan progress (e.g. `"🧠 2/3 → Fix parser"`) into every Hermes message.
+
+Each tool accepts an optional `session_id` parameter for plan isolation across Hermes threads — passed automatically by Hermes from the session context. If not provided, defaults to `~/.brain/state/plan.json`.
 
 Full setup: see `LLMS.md`.
 
 ## Plan Management
 
-Brain persists plans in `~/.brain/state/plan.json`. Plans auto-expire after 300 seconds of inactivity — each `brain plan done` and `brain plan block` resets the timer.
+Brain persists plans in `~/.brain/state/`. Each session gets its own file — `plan.json` (default) or `plan-{session_id}.json`.
 
 ```bash
 # Create a plan (uses planner profile, returns structured JSON)
 brain think "Fix the auth bug" --plan
 
-# Show current plan
+# Isolate plans per Hermes thread (session-id)
+brain think "Refactor module" --plan --session-id "thread-42"
+
+# Show current plan (default session)
 brain plan
+
+# Show plan for a specific session
+brain plan --session-id "thread-42"
 
 # Mark current step done → advances to next step
 brain plan done
+
+# Mark step done in isolated session
+brain plan done --session-id "thread-42"
 
 # Mark current step blocked
 brain plan block "Missing API credentials"
@@ -110,10 +121,14 @@ brain think "Detail the plan" --max-tokens 4096 --temperature 0.1
 |---------|-------------|
 | `think` | Send prompt to reasoning engine |
 | `think --plan` | Create a structured plan (planner profile) |
+| `think --plan --session-id <id>` | Create plan in isolated session |
 | `think --force` | Bypass gate and overwrite plan |
-| `plan` | Show current plan |
+| `plan` | Show current plan (default session) |
+| `plan --session-id <id>` | Show plan for a specific session |
 | `plan done` | Mark current step done, advance |
+| `plan done --session-id <id>` | Mark step done in isolated session |
 | `plan block [reason]` | Mark current step blocked |
+| `plan block [reason] --session-id <id>` | Block step in isolated session |
 | `key` | Show current API key location |
 | `key-set <key>` | Save API key to profile .env |
 | `profiles` | List available reasoning profiles |
@@ -174,12 +189,14 @@ Built-in profiles cannot be overridden or removed. User profiles are stored in `
 
 ## Depth Presets
 
-| Depth | Max Tokens | Temperature | Reasoning Effort |
-|-------|-----------|-------------|------------------|
-| `quick` | 2,048 | 0.2 | low |
-| `normal` | 8,192 | 0.3 | medium |
-| `deep` | 16,384 | 0.4 | high |
-| `exhaustive` | 32,768 | 0.5 | high |
+| Depth | Max Tokens | Reasoning Effort |
+|-------|-----------|------------------|
+| `quick` | 4,096 | low |
+| `normal` | 8,192 | medium |
+| `deep` | 16,384 | high |
+| `exhaustive` | 32,768 | high |
+
+`reasoning_effort` is injected only for OpenAI o-series models (o1/o3/o4). Depth does not set temperature — reasoning models optimise it internally.
 
 ```bash
 brain think "Quick check" --depth quick
