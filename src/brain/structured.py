@@ -29,7 +29,7 @@ def build_json_output(
 ) -> str:
     """Build a JSON output dict for --json mode.
 
-    Always includes 'response'. Includes 'usage' if stats available.
+    Always includes 'response'. Includes 'usage' only when token/cost/latency data is provided.
     """
     result: dict = {
         "response": strip_code_fences(response_text),
@@ -49,7 +49,16 @@ def build_json_output(
     if latency_ms is not None:
         usage["latency_ms"] = round(latency_ms, 1)
 
-    if usage:
+    has_stats = any(
+        [
+            prompt_tokens is not None,
+            completion_tokens is not None,
+            total_tokens is not None,
+            cost_usd is not None,
+            latency_ms is not None,
+        ]
+    )
+    if has_stats:
         result["usage"] = usage
 
     return json.dumps(result, indent=2, ensure_ascii=False)
