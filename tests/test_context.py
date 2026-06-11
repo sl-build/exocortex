@@ -64,15 +64,14 @@ class TestAssembleMessages:
 
     def test_basic_prompt(self):
         msgs = assemble_messages(prompt="What is 2+2?")
-        assert len(msgs) == 2
-        assert msgs[0]["role"] == "system"
-        assert msgs[1]["role"] == "user"
-        assert "What is 2+2?" in msgs[1]["content"]
+        assert len(msgs) == 1
+        assert msgs[0]["role"] == "user"
+        assert "What is 2+2?" in msgs[0]["content"]
 
     def test_with_context(self):
         ctx = build_context_block(context="Budget: $100")
         msgs = assemble_messages(prompt="Is this a good deal?", context_block=ctx)
-        user_content = msgs[1]["content"]
+        user_content = msgs[0]["content"]
         assert "<context>" in user_content
         assert "Budget: $100" in user_content
 
@@ -96,7 +95,7 @@ class TestAssembleMessages:
         """Context should appear before the prompt in user message."""
         ctx = "<context>\nctx data\n</context>"
         msgs = assemble_messages(prompt="my question", context_block=ctx)
-        user = msgs[1]["content"]
+        user = msgs[0]["content"]
         idx_ctx = user.find("ctx data")
         idx_prompt = user.find("my question")
         assert idx_ctx < idx_prompt, "context should precede prompt"
@@ -107,7 +106,7 @@ class TestAssembleMessages:
         f.write_text("function foo() { return 1; }")
         ctx = build_context_block(context_file=str(f))
         msgs = assemble_messages(prompt="Critique this logic", context_block=ctx)
-        assert "function foo()" in msgs[1]["content"]
+        assert "function foo()" in msgs[0]["content"]
 
     def test_article_comment_example_stdin(self, monkeypatch):
         """Article comment: cat error.log | brain think "Why did this fail?" --stdin-context --profile reasoning"""
@@ -116,4 +115,4 @@ class TestAssembleMessages:
         monkeypatch.setattr("sys.stdin.isatty", lambda: False)
         ctx = build_context_block(stdin_context=True)
         msgs = assemble_messages(prompt="Why did this fail?", context_block=ctx)
-        assert "connection refused" in msgs[1]["content"]
+        assert "connection refused" in msgs[0]["content"]
