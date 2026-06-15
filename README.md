@@ -142,7 +142,7 @@ The `api_key_env` value is just a **variable name**, not the key itself. The key
 | `type` value | Adapter | API format |
 |---|---|---|
 | `openai-compatible` | `oa_compat.py` | OpenAI `/chat/completions` |
-| `anthropic-compatible` | `reasoning.py` | Anthropic `/messages` |
+| `anthropic-compatible` | `reasoning.py` | Anthropic `/messages` (uses `anthropic` SDK) |
 
 The CLI picks the adapter automatically based on `type`.
 
@@ -238,7 +238,7 @@ pip install -e .
 
 - Python 3.11+
 - At least one LLM provider API key
-- `openai` and `httpx` (installed automatically)
+- `openai` and `anthropic` (installed automatically)
 
 ---
 

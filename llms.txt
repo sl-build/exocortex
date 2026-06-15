@@ -74,7 +74,7 @@ Then set the key: `export OPENCODE_GO_API_KEY="sk-..."` and use:
 
 Adapter type → API format:
 - `openai-compatible` → OpenAI `/chat/completions` (uses `openai` SDK)
-- `anthropic-compatible` → Anthropic `/messages` (uses `httpx`)
+- `anthropic-compatible` → Anthropic `/messages` (uses `anthropic` SDK)
 
 ## Flags for `think`
 
