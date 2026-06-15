@@ -74,7 +74,9 @@ def _find_var_in_file(path: Path, var_name: str) -> str | None:
         line = line.strip()
         if line.startswith("#"):
             continue
-        if line.startswith(f"{var_name}="):
+        # Accept both `VAR=value` and `export VAR=value` (the latter is common
+        # in shell-sourced .env files like ~/.hermes/profiles/<active>/.env).
+        if line.startswith(f"{var_name}=") or line.startswith(f"export {var_name}="):
             val = line.split("=", 1)[1].strip().strip('"').strip("'")
             if val:
                 return val

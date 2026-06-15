@@ -44,6 +44,41 @@ class TestKeyManagement:
         key = get_api_key("openrouter")
         assert key == "sk-override"
 
+    def test_find_key_from_profile_env_with_export_prefix(
+        self, mock_env_files, monkeypatch
+    ):
+        """`export VAR=value` lines (typical in shell-sourced .env) must parse.
+
+        Regression: previously _find_var_in_file only matched `VAR=value` at
+        line start, so `export OPENROUTER_API_KEY=sk-...` was silently skipped.
+        That broke direct (non-wrapper) invocations of `brain think` for any
+        user whose .env used the `export ` prefix — including the goose profile
+        shipped with Hermes.
+        """
+        monkeypatch.delenv("OPENROUTER_API_KEY", raising=False)
+        monkeypatch.delenv("EXOCORTEX_API_KEY", raising=False)
+        mock_env_files.write_text(
+            "# comment line\n"
+            "\n"
+            "export OPENROUTER_API_KEY=sk-from-export-prefix\n"
+        )
+        result = find_key_source("openrouter")
+        assert result is not None
+        key, _path = result
+        assert key == "sk-from-export-prefix"
+
+    def test_find_key_from_profile_env_plain_form_still_works(
+        self, mock_env_files, monkeypatch
+    ):
+        """Plain `VAR=value` form must keep working (no regression)."""
+        monkeypatch.delenv("OPENROUTER_API_KEY", raising=False)
+        monkeypatch.delenv("EXOCORTEX_API_KEY", raising=False)
+        mock_env_files.write_text("OPENROUTER_API_KEY=sk-plain\n")
+        result = find_key_source("openrouter")
+        assert result is not None
+        key, _path = result
+        assert key == "sk-plain"
+
 
 class TestBaseUrls:
     def test_openrouter_url(self):
