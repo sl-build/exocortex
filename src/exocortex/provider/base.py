@@ -19,6 +19,7 @@ class Adapter(Protocol):
         temperature: float | None = None,
         reasoning_effort: str | None = None,
         timeout: float | None = None,
+        retries: int = 3,
     ) -> tuple[str, Stats]: ...
 
     def supports_model(self, model: str) -> bool: ...

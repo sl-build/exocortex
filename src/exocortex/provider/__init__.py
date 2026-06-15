@@ -63,6 +63,7 @@ def complete(
     temperature: float | None = None,
     reasoning_effort: str | None = None,
     timeout: float | None = None,
+    retries: int = 3,
 ) -> tuple[str, Stats]:
     """Send messages through the correct adapter for the model+provider pair."""
     adapter = get_adapter(model, provider, timeout=timeout)
@@ -73,4 +74,5 @@ def complete(
         temperature=temperature,
         reasoning_effort=reasoning_effort,
         timeout=timeout,
+        retries=retries,
     )

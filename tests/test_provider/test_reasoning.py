@@ -132,3 +132,76 @@ class TestReasoningAdapter:
             mock_client_cls.assert_called_once()
             passed_timeout = mock_client_cls.call_args.kwargs.get("timeout")
             assert passed_timeout == 180.0, f"expected 180.0, got {passed_timeout}"
+
+    def test_connection_error_retries(self):
+        """httpx.ConnectError should raise RetryableError and be retried."""
+        import httpx
+        from exocortex.errors import APIError
+        from exocortex.provider.reasoning import ReasoningAdapter
+
+        call_count = 0
+        mock_json = {
+            "content": [{"type": "text", "text": "ok after retry"}],
+            "usage": {"input_tokens": 1, "output_tokens": 1},
+            "model": "qwen3.7-max",
+        }
+        mock_response = _make_json_response(200, mock_json)
+
+        def post_side_effect(*args, **kwargs):
+            nonlocal call_count
+            call_count += 1
+            if call_count == 1:
+                raise httpx.ConnectError("Connection refused")
+            return mock_response
+
+        with patch("httpx.Client") as mock_client_cls:
+            mock_client = mock_client_cls.return_value.__enter__.return_value
+            mock_client.post.side_effect = post_side_effect
+
+            adapter = ReasoningAdapter(
+                base_url="https://opencode.ai/zen/go/v1",
+                api_key="test-key",
+            )
+            text, stats = adapter.complete(
+                messages=[{"role": "user", "content": "think"}],
+                model="qwen3.7-max",
+                retries=2,
+            )
+            assert text == "ok after retry"
+            assert call_count == 2
+
+    def test_timeout_error_retries(self):
+        """httpx.TimeoutException should raise RetryableError and be retried."""
+        import httpx
+        from exocortex.provider.reasoning import ReasoningAdapter
+
+        call_count = 0
+        mock_json = {
+            "content": [{"type": "text", "text": "ok"}],
+            "usage": {"input_tokens": 1, "output_tokens": 1},
+            "model": "qwen3.7-max",
+        }
+        mock_response = _make_json_response(200, mock_json)
+
+        def post_side_effect(*args, **kwargs):
+            nonlocal call_count
+            call_count += 1
+            if call_count == 1:
+                raise httpx.TimeoutException("Read timed out")
+            return mock_response
+
+        with patch("httpx.Client") as mock_client_cls:
+            mock_client = mock_client_cls.return_value.__enter__.return_value
+            mock_client.post.side_effect = post_side_effect
+
+            adapter = ReasoningAdapter(
+                base_url="https://opencode.ai/zen/go/v1",
+                api_key="test-key",
+            )
+            text, stats = adapter.complete(
+                messages=[{"role": "user", "content": "think"}],
+                model="qwen3.7-max",
+                retries=2,
+            )
+            assert text == "ok"
+            assert call_count == 2

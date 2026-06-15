@@ -91,6 +91,7 @@ def _call_api(
         temperature=params.get("temperature"),
         reasoning_effort=params.get("reasoning_effort"),
         timeout=timeout_val,
+        retries=retries,
     )
 
 

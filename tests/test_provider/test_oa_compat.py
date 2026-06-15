@@ -180,3 +180,62 @@ class TestOACompatAdapter:
                 model="gpt-4o",
             )
             assert captured["timeout"] == 180.0
+
+    def test_connection_error_retries(self):
+        """openai.APIConnectionError should raise RetryableError and be retried."""
+        import openai
+        from exocortex.provider.oa_compat import OACompatAdapter
+
+        call_count = 0
+
+        mock_response = type(
+            "MockChoice",
+            (),
+            {
+                "message": type("MockMsg", (), {"content": "ok after retry"})(),
+            },
+        )()
+        mock_completion = type(
+            "MockCompletion",
+            (),
+            {
+                "choices": [mock_response],
+                "model": "gpt-4o",
+                "usage": type(
+                    "MockUsage", (), {"prompt_tokens": 1, "completion_tokens": 1, "total_tokens": 2}
+                )(),
+            },
+        )()
+
+        def fake_create(self, **kwargs):
+            nonlocal call_count
+            call_count += 1
+            if call_count == 1:
+                raise openai.APIConnectionError(request=type("Req", (), {})())
+            return mock_completion
+
+        mock_openai = type(
+            "MockOpenAI",
+            (),
+            {
+                "chat": type(
+                    "MockChat",
+                    (),
+                    {
+                        "completions": type("MockCompletions", (), {"create": fake_create})(),
+                    },
+                )(),
+                "api_key": "test-key",
+                "base_url": "https://test.url",
+            },
+        )()
+
+        with patch("openai.OpenAI", return_value=mock_openai):
+            adapter = OACompatAdapter(base_url="https://test.url", api_key="test-key")
+            text, stats = adapter.complete(
+                messages=[{"role": "user", "content": "hi"}],
+                model="gpt-4o",
+                retries=2,
+            )
+            assert text == "ok after retry"
+            assert call_count == 2

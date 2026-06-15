@@ -67,6 +67,10 @@ class OACompatAdapter:
             except BadResponseError:
                 raise
             except Exception as e:
+                import openai
+                if isinstance(e, (openai.APIConnectionError, openai.APITimeoutError)):
+                    stats.retries_used += 1
+                    raise RetryableError(f"Connection error: {e}", status_code=None) from e
                 status_code = getattr(e, "status_code", None)
                 if status_code and is_retryable(status_code):
                     stats.retries_used += 1

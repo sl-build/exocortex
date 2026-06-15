@@ -123,6 +123,12 @@ class ReasoningAdapter:
                 raise
             except RetryableError:
                 raise
+            except httpx.ConnectError as e:
+                stats.retries_used += 1
+                raise RetryableError(f"Connection error: {e}", status_code=None) from e
+            except httpx.TimeoutException as e:
+                stats.retries_used += 1
+                raise RetryableError(f"Timeout: {e}", status_code=None) from e
             except Exception as e:
                 raise APIError(str(e)) from e
 
