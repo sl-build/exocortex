@@ -1,0 +1,192 @@
+# Exocortex CLI
+
+> A Python CLI reasoning engine for AI agents. Sends prompts to OpenRouter or any OpenAI/Anthropic-compatible endpoint, returns responses. Works as CLI, MCP tool, or Python library. v0.2.2.
+
+## Install
+
+```bash
+# Preferred (isolated, fast)
+uv tool install exocortex-cli
+
+# Alternatives
+pipx install exocortex-cli
+pip install exocortex-cli
+
+# From source
+git clone https://github.com/sl-build/exocortex.git
+cd exocortex && uv pip install -e .
+
+# Verify
+brain --version   # exocortex 0.2.x
+```
+
+Requires Python 3.11+.
+
+## Setup (one-time)
+
+**Interactive:**
+```bash
+brain init
+```
+Walks through: provider choice, API key, default model, connection test.
+
+**Non-interactive (agent-friendly):**
+```bash
+# 1. Set API key in env
+export OPENROUTER_API_KEY="sk-or-v1-..."
+
+# 2. Optional: set default model
+brain config-set model openai/gpt-4o
+brain config-set timeout 300   # seconds, default 180
+
+# 3. Verify
+brain status
+brain providers
+brain think "Reply with OK" --raw
+```
+
+## Use
+
+```bash
+brain think "How does async/await work?"
+brain think "Explain" --context-file code.py
+cat err.log | brain think "Why?" --stdin-context
+brain think "hi" --provider opencode_go --model qwen3.7-max --raw
+```
+
+Output is the model's reply to stdout. Use `--json` for structured, `--stats` for token counts on stderr.
+
+## Custom providers
+
+Add `[providers.<name>]` to `~/.config/exocortex/config.toml`:
+
+```toml
+[providers.opencode_go]
+type = "anthropic-compatible"
+base_url = "https://opencode.ai/zen/go/v1"
+api_key_env = "OPENCODE_GO_API_KEY"
+models = ["qwen3.7-max", "qwen3.6-plus"]
+default_model = "qwen3.7-max"
+```
+
+Then set the key: `export OPENCODE_GO_API_KEY="sk-..."` and use:
+`brain think "hi" --provider opencode_go --model qwen3.7-max`.
+
+Adapter type → API format:
+- `openai-compatible` → OpenAI `/chat/completions` (uses `openai` SDK)
+- `anthropic-compatible` → Anthropic `/messages` (uses `httpx`)
+
+## Flags for `think`
+
+| Flag | Effect |
+|---|---|
+| `--provider` / `-P` | Provider name (built-in: `openrouter`) |
+| `--model` / `-m` | Model ID, scoped to provider (no `provider/model` syntax) |
+| `--profile` / `-p` | Reasoning profile (see `brain profiles`) |
+| `--depth` / `-d` | `quick` \| `normal` (default) \| `deep` \| `exhaustive` |
+| `--context` / `-c` | Inline context string |
+| `--context-file` / `-f` | Path to context file |
+| `--stdin-context` / `-s` | Read context from stdin |
+| `--max-tokens` / `-t` | Override max output tokens (default 16384) |
+| `--temperature` | Override temperature |
+| `--raw` / `-r` | Skip system prompt (faster, no profile) |
+| `--json` / `-j` | Strip code fences, output clean JSON |
+| `--stats` | Print usage stats to stderr |
+| `--plan` | Use planner profile, produce structured plan |
+| `--session-id` | Isolate plan state |
+
+## Built-in commands
+
+| Command | Purpose |
+|---|---|
+| `brain` | Quickstart text |
+| `brain init` | First-time setup wizard |
+| `brain status` | Show config + key source + provider list, optional ping |
+| `brain providers` | Table of all providers (built-in + custom) |
+| `brain config` | Show `[defaults]` from config.toml |
+| `brain config-set KEY VAL` | Set `provider`, `model`, or `timeout` |
+| `brain think PROMPT` | Run prompt through model |
+| `brain plan [done\|block REASON]` | Manage structured plan |
+| `brain key` | Show key location |
+| `brain key-set KEY` | Save key to `~/.hermes/profiles/<active>/.env` |
+| `brain profiles` | List profiles |
+| `brain profile-add NAME --prompt PROMPT [--depth D] [--temp T]` | Add profile |
+| `brain profile-remove NAME` | Remove profile |
+| `brain profile-show NAME` | Show profile details |
+
+## Files & paths
+
+| Path | Purpose |
+|---|---|
+| `~/.config/exocortex/config.toml` | User config (defaults + custom providers) |
+| `~/.hermes/profiles/<active>/.env` | API keys (sourced by `brain` wrapper) |
+| `~/.hermes/.env` | Global API keys (fallback) |
+| `~/.local/bin/exocortex` | CLI binary (after `uv tool install`) |
+
+## API key resolution order
+
+1. Env var `<api_key_env>` from config.toml
+2. Generic `EXOCORTEX_API_KEY` env var
+3. `~/.hermes/profiles/<active>/.env` (parsed)
+4. `~/.hermes/.env` (parsed)
+5. For OpenRouter: also checks `OPENROUTER_API_KEY`
+6. Interactive prompt (saves to profile .env)
+
+## Python API
+
+```python
+from exocortex import client
+
+# High-level
+text = client.call_and_print(
+    prompt="Explain this",
+    provider="openrouter",     # or custom name
+    model="openai/gpt-4o",     # optional
+    depth="deep",              # quick|normal|deep|exhaustive
+    show_stats=True,
+)
+
+# Low-level
+from exocortex.provider import complete
+text, stats = complete(
+    messages=[{"role": "user", "content": "Hello"}],
+    model="qwen3.7-max",
+    provider="opencode_go",
+    max_tokens=256,
+    temperature=0.3,
+)
+print(text, stats.prompt_tokens, stats.completion_tokens)
+```
+
+## Common errors
+
+| Error | Cause | Fix |
+|---|---|---|
+| `OPENROUTER_API_KEY not found` | Key not in env or .env | `export OPENROUTER_API_KEY=...` or `brain init` |
+| `Request timeout` | Model slow + low timeout | `brain config-set timeout 300` |
+| `Model not supported for format oa-compat` | Used wrong adapter type | Set `type = "anthropic-compatible"` for Anthropic-style endpoints |
+| `Invalid body format` | Provider expects fields CLI didn't send | Check `type` matches the provider's actual API |
+| `Unknown provider` | Provider not in config | `brain providers` to see available; add custom in config.toml |
+| `brain: command not found` | PATH missing `~/.local/bin` | Add `export PATH="$HOME/.local/bin:$PATH"` to shell rc |
+
+## Exit codes
+
+`0` success · `1` generic · `2` input error · `3` API failure · `4` bad response · `130` interrupted.
+
+## Backward compat
+
+`brain` = `exocortex` (alias). The `brain` wrapper script at `~/.local/bin/brain` sources the profile `.env` before calling `exocortex`, so you don't need to `export` keys in every shell.
+
+## Source / docs
+
+- Repo: https://github.com/sl-build/exocortex
+- PyPI: https://pypi.org/project/exocortex/
+- Plugin (Hermes): https://github.com/sl-build/exocortex/tree/main/plugin
+
+## MCP integration
+
+Exocortex exposes itself as MCP tools for Hermes. Tool IDs: `brain_think`, `brain_plan_done`, `brain_plan_block`. Install the plugin: `pip install exocortex hermes-exocortex`.
+
+## License
+
+MIT
