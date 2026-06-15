@@ -165,4 +165,4 @@ class TestNoArgQuickstart:
             main(["--version"])
         assert exc_info.value.code == 0
         out = capsys.readouterr().out
-        assert "0.2.2" in out
+        assert "0.2.3" in out

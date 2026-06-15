@@ -12,7 +12,7 @@ def _ensure_config() -> None:
     """Ensure config directory and file exist."""
     CONFIG_DIR.mkdir(parents=True, exist_ok=True)
     if not CONFIG_FILE.exists():
-        CONFIG_FILE.write_text('[defaults]\nprovider = "openrouter"\nmodel = ""\ntimeout = 180\n')
+        CONFIG_FILE.write_text('[defaults]\nprovider = "openrouter"\nmodel = ""\ntimeout = 180\nmax_iterations = 3\n')
 
 
 def load_config() -> dict:
@@ -27,6 +27,7 @@ def load_config() -> dict:
         "provider": defaults.get("provider", "openrouter"),
         "model": defaults.get("model", ""),
         "timeout": defaults.get("timeout", 180),
+        "max_iterations": defaults.get("max_iterations", 3),
     }
 
     # Provider-specific config
@@ -47,7 +48,7 @@ def load_config() -> dict:
 
 
 def save_config(key: str, value: str) -> None:
-    if key not in ("provider", "model", "timeout"):
+    if key not in ("provider", "model", "timeout", "max_iterations"):
         raise ValueError(f"Invalid config key: {key}")
     _ensure_config()
     config = load_config()
@@ -125,3 +126,12 @@ def get_provider_model_map(provider: str) -> dict[str, str]:
     provider_configs = config.get("provider_config", {})
     prov = provider_configs.get(provider, {})
     return prov.get("model_map", {})
+
+
+def get_max_iterations() -> int:
+    """Return the default max_iterations from config."""
+    val = load_config().get("max_iterations", 3)
+    try:
+        return int(val)
+    except (ValueError, TypeError):
+        return 3

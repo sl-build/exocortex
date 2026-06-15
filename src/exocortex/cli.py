@@ -109,6 +109,12 @@ def build_parser() -> argparse.ArgumentParser:
         action="store_true",
         help="Bypass gate and overwrite any existing plan",
     )
+    think_parser.add_argument(
+        "--max-iterations",
+        type=int,
+        default=None,
+        help="Max agent-brain round-trips (default: 3 from config)",
+    )
 
     # ── plan ──
     plan_parser = subparsers.add_parser("plan", help="Show current plan")
@@ -212,6 +218,7 @@ def main(argv: list[str] | None = None) -> int:
                 plan_mode=args.plan,
                 force=args.force,
                 session_id=args.session_id,
+                max_iterations=args.max_iterations,
             )
             return SUCCESS
 
