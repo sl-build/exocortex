@@ -1,19 +1,17 @@
-# Exocortex CLI v0.2.2 — Reasoning Engine for AI Agents
+# Exocortex CLI v0.2.5 — Reasoning Engine
+
+> **Agents:** see [`llms.txt`](llms.txt) for machine-readable setup instructions.
 
 [![PyPI version](https://img.shields.io/pypi/v/exocortex)](https://pypi.org/project/exocortex/)
 [![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
 
-Exocortex CLI is a reasoning engine for AI agents. It sends prompts to language models (OpenAI, Anthropic, Gemini, DeepSeek, Qwen) via OpenRouter or any custom OpenAI/Anthropic-compatible endpoint and returns the response. Can be used as an MCP tool, a CLI, or a Python library.
+Exocortex CLI sends prompts to language models (OpenAI, Anthropic, Gemini, DeepSeek, Qwen) via OpenRouter or any custom OpenAI/Anthropic-compatible endpoint and returns the response. Use it as a CLI, an MCP tool, or a Python library.
 
 > **Quick alias:** `brain` is a symlink/wrapper for `exocortex`. Both work identically.
 
 ---
 
-## For Agents: Self-Install & Self-Configure
-
-If you are an AI agent installing and configuring exocortex, follow these steps in order.
-
-### Step 1. Install
+## Install
 
 ```bash
 # Recommended (uv — fast, isolated)
@@ -28,7 +26,7 @@ pip install exocortex-cli
 
 Verify: `brain --version` should print `exocortex 0.2.x`.
 
-### Step 2. Get an API key
+### Get an API key
 
 You need at least one provider key. The default is **OpenRouter** (one key gives access to 300+ models).
 
@@ -36,7 +34,7 @@ You need at least one provider key. The default is **OpenRouter** (one key gives
 - **OpenCode Go**: https://opencode.ai/auth — format `sk-...`
 - **Any OpenAI-compatible or Anthropic-compatible endpoint** — your own
 
-### Step 3. Run the setup wizard
+### Run the setup wizard
 
 ```bash
 brain init
@@ -44,21 +42,23 @@ brain init
 
 This walks you through provider choice, key entry, default model, and tests the connection.
 
-**Or do it manually** (non-interactive, agent-friendly):
+**Or do it manually** (non-interactive):
 
 ```bash
-# 3a. Save key to your .env file
-echo 'export OPENROUTER_API_KEY="sk-or-v1-..."' >> ~/.bashrc
-# or for current session only:
+# 1. Save key to your .env file
 export OPENROUTER_API_KEY="sk-or-v1-..."
 
-# 3b. Verify
+# 2. Optional: set default model and timeout
+brain config-set model openai/gpt-4o
+brain config-set timeout 300   # seconds, default 180
+
+# 3. Verify
 brain status
 brain providers
 brain think "Reply with OK" --raw
 ```
 
-### Step 4. Use it
+### Use it
 
 ```bash
 brain think "How does async/await work in Python?"
@@ -171,7 +171,7 @@ For OpenRouter specifically, the key `OPENROUTER_API_KEY` is also accepted at st
 
 ---
 
-## Python API (for agent embedding)
+## Python API
 
 ```python
 from exocortex import client

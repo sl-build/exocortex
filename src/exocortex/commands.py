@@ -259,7 +259,7 @@ def cmd_config() -> None:
     print(f"provider: {config['provider']}")
     model = config["model"]
     print(f"model: {model if model else '(provider default)'}")
-    print(f"timeout: {config.get('timeout', '120')}")
+    print(f"timeout: {config.get('timeout', 180)}")
 
 def cmd_config_set(key: str, value: str) -> None:
     """Set a configuration value."""

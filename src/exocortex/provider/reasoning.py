@@ -22,7 +22,8 @@ class ReasoningAdapter:
     def __init__(self, base_url: str, api_key: str, timeout: float | None = None):
         self._base_url = base_url.rstrip("/")
         self._api_key = api_key
-        self._timeout = timeout or 120.0
+        # Match CLI default timeout (config default is 180s).
+        self._timeout = timeout or 180.0
 
     def complete(
         self,

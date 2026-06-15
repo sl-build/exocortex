@@ -116,3 +116,67 @@ class TestOACompatAdapter:
         adapter = OACompatAdapter(base_url="https://test.url", api_key="test-key")
         assert adapter.supports_model("anything")
         assert adapter.supports_model("")
+
+    def test_default_timeout_enforced(self):
+        """Regression: timeout=None must not fall through to OpenAI SDK 60s default."""
+        captured = {}
+
+        def fake_openai_init(*args, **kwargs):
+            captured["timeout"] = kwargs.get("timeout")
+            # Return a minimal mock that won't be used
+            return type(
+                "MockOpenAI",
+                (),
+                {
+                    "chat": type(
+                        "MockChat",
+                        (),
+                        {
+                            "completions": type(
+                                "MockCompletions",
+                                (),
+                                {
+                                    "create": lambda self, **kw: type(
+                                        "MockResponse",
+                                        (),
+                                        {
+                                            "choices": [
+                                                type(
+                                                    "Choice",
+                                                    (),
+                                                    {
+                                                        "message": type(
+                                                            "Msg", (), {"content": "ok"}
+                                                        )()
+                                                    },
+                                                )()
+                                            ],
+                                            "model": "gpt-4o",
+                                            "usage": type(
+                                                "Usage",
+                                                (),
+                                                {
+                                                    "prompt_tokens": 1,
+                                                    "completion_tokens": 1,
+                                                    "total_tokens": 2,
+                                                },
+                                            )(),
+                                        },
+                                    )()
+                                },
+                            )()
+                        },
+                    )()
+                },
+            )()
+
+        with patch("openai.OpenAI", side_effect=fake_openai_init):
+            from exocortex.provider.oa_compat import OACompatAdapter
+
+            adapter = OACompatAdapter(base_url="https://test.url", api_key="test-key")
+            assert adapter._timeout == 180.0
+            adapter.complete(
+                messages=[{"role": "user", "content": "hi"}],
+                model="gpt-4o",
+            )
+            assert captured["timeout"] == 180.0

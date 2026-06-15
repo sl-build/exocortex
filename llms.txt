@@ -1,6 +1,6 @@
 # Exocortex CLI
 
-> A Python CLI reasoning engine for AI agents. Sends prompts to OpenRouter or any OpenAI/Anthropic-compatible endpoint, returns responses. Works as CLI, MCP tool, or Python library. v0.2.2.
+> A Python CLI reasoning engine for AI agents. Sends prompts to OpenRouter or any OpenAI/Anthropic-compatible endpoint, returns responses. Works as CLI, MCP tool, or Python library. v0.2.5.
 
 ## Install
 

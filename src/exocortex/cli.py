@@ -44,7 +44,7 @@ def build_parser() -> argparse.ArgumentParser:
     """Build the argument parser."""
     parser = argparse.ArgumentParser(
         prog="exocortex",
-        description="Exocortex CLI — Reasoning engine for agents",
+        description="Exocortex CLI — Reasoning engine",
     )
     parser.add_argument("--version", action="version", version=f"exocortex {__version__}")
     parser.add_argument("--session-id", default="", help="Session ID for plan isolation")
@@ -183,7 +183,7 @@ def main(argv: list[str] | None = None) -> int:
 
     # No command given — friendly quickstart
     if not args.command:
-        print("Exocortex CLI v" + __version__ + " — Reasoning engine for agents")
+        print("Exocortex CLI v" + __version__ + " — Reasoning engine")
         print()
         print("First time? Run:  brain init")
         print()

@@ -16,7 +16,8 @@ class OACompatAdapter:
     def __init__(self, base_url: str, api_key: str, timeout: float | None = None):
         self._base_url = base_url
         self._api_key = api_key
-        self._timeout = timeout
+        # OpenAI SDK defaults to 60s when timeout=None; enforce CLI default.
+        self._timeout = timeout or 180.0
 
     def complete(
         self,
