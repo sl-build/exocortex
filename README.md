@@ -109,7 +109,7 @@ cat error.log | exobrain think "Why did this fail?" --stdin-context
 
 | Flag | Description |
 |------|-------------|
-| `--provider`, `-P` | Provider name (`openrouter` or custom) |
+| `--provider` | Provider name (`openrouter` or custom) |
 | `--model`, `-m` | Model ID (scoped to provider) |
 | `--profile`, `-p` | Reasoning profile (see `exobrain profiles`) |
 | `--depth`, `-d` | `quick` / `normal` / `deep` / `exhaustive` |
@@ -121,7 +121,11 @@ cat error.log | exobrain think "Why did this fail?" --stdin-context
 | `--raw`, `-r` | Skip system prompt (faster, no reasoning profile) |
 | `--json`, `-j` | Strip code fences, output clean JSON |
 | `--stats` | Show token usage + cost on stderr |
+| `--raw-model` | Use model name as-is, without provider prefix transformation |
+| `--metadata`, `-M` | Metadata key=value pairs (repeatable) |
 | `--plan` | Create a structured plan |
+| `--force` | Bypass gate and overwrite any existing plan |
+| `--max-iterations` | Max agent-brain round-trips (default: 3 from config) |
 | `--session-id` | Isolate plan state per session |
 
 ---
@@ -136,12 +140,12 @@ provider = "openrouter"          # built-in default
 model = "openai/gpt-4o"          # optional; falls back to provider default
 timeout = 180                    # seconds (default: 180)
 
-[providers.opencode_go]
-type = "anthropic-compatible"    # or "openai-compatible"
-base_url = "https://opencode.ai/zen/go/v1"
-api_key_env = "OPENCODE_GO_API_KEY"  # env var that holds the key
-models = ["qwen3.7-max", "qwen3.6-plus"]
-default_model = "qwen3.7-max"
+[providers.my_provider]
+type = "openai-compatible"       # or "anthropic-compatible"
+base_url = "https://my-endpoint.example.com/v1"
+api_key_env = "MY_PROVIDER_API_KEY"  # env var that holds the key
+models = ["model-a", "model-b"]
+default_model = "model-a"
 ```
 
 The `api_key_env` value is just a **variable name**, not the key itself. The key must be set in the environment (or in `~/.hermes/profiles/<profile>/.env` if using the exobrain wrapper).

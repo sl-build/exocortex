@@ -71,16 +71,16 @@ Output is the model's reply to stdout. Use `--json` for structured, `--stats` fo
 Add `[providers.<name>]` to `~/.config/exobrain/config.toml`:
 
 ```toml
-[providers.opencode_go]
-type = "anthropic-compatible"
-base_url = "https://opencode.ai/zen/go/v1"
-api_key_env = "OPENCODE_GO_API_KEY"
-models = ["qwen3.7-max", "qwen3.6-plus"]
-default_model = "qwen3.7-max"
+[providers.my_provider]
+type = "openai-compatible"
+base_url = "https://my-endpoint.example.com/v1"
+api_key_env = "MY_PROVIDER_API_KEY"
+models = ["model-a", "model-b"]
+default_model = "model-a"
 ```
 
-Then set the key: `export OPENCODE_GO_API_KEY="sk-..."` and use:
-`exobrain think "hi" --provider opencode_go --model qwen3.7-max`.
+Then set the key: `export MY_PROVIDER_API_KEY="sk-..."` and use:
+`exobrain think "hi" --provider my_provider --model model-a`.
 
 Adapter type → API format:
 - `openai-compatible` → OpenAI `/chat/completions` (uses `openai` SDK)
@@ -90,7 +90,7 @@ Adapter type → API format:
 
 | Flag | Effect |
 |---|---|
-| `--provider` / `-P` | Provider name (built-in: `openrouter`) |
+| `--provider` | Provider name (built-in: `openrouter`) |
 | `--model` / `-m` | Model ID, scoped to provider (no `provider/model` syntax) |
 | `--profile` / `-p` | Reasoning profile (see `exobrain profiles`) |
 | `--depth` / `-d` | `quick` \| `normal` (default) \| `deep` \| `exhaustive` |
@@ -102,7 +102,11 @@ Adapter type → API format:
 | `--raw` / `-r` | Skip system prompt (faster, no profile) |
 | `--json` / `-j` | Strip code fences, output clean JSON |
 | `--stats` | Print usage stats to stderr |
+| `--raw-model` | Use model name as-is, without provider prefix transformation |
+| `--metadata` / `-M` | Metadata key=value pairs (repeatable) |
 | `--plan` | Use planner profile, produce structured plan |
+| `--force` | Bypass gate and overwrite any existing plan |
+| `--max-iterations` | Max agent-brain round-trips (default: 3 from config) |
 | `--session-id` | Isolate plan state |
 
 ## Built-in commands
@@ -142,32 +146,6 @@ Adapter type → API format:
 5. For OpenRouter: also checks `OPENROUTER_API_KEY`
 6. Interactive prompt (saves to profile .env)
 
-## Python API
-
-```python
-from exobrain import client
-
-# High-level
-text = client.call_and_print(
-    prompt="Explain this",
-    provider="openrouter",     # or custom name
-    model="openai/gpt-4o",     # optional
-    depth="deep",              # quick|normal|deep|exhaustive
-    show_stats=True,
-)
-
-# Low-level
-from exobrain.provider import complete
-text, stats = complete(
-    messages=[{"role": "user", "content": "Hello"}],
-    model="qwen3.7-max",
-    provider="opencode_go",
-    max_tokens=256,
-    temperature=0.3,
-)
-print(text, stats.prompt_tokens, stats.completion_tokens)
-```
-
 ## Common errors
 
 | Error | Cause | Fix |
@@ -178,10 +156,6 @@ print(text, stats.prompt_tokens, stats.completion_tokens)
 | `Invalid body format` | Provider expects fields CLI didn't send | Check `type` matches the provider's actual API |
 | `Unknown provider` | Provider not in config | `exobrain providers` to see available; add custom in config.toml |
 | `exobrain: command not found` | PATH missing `~/.local/bin` | Add `export PATH="$HOME/.local/bin:$PATH"` to shell rc |
-
-## Exit codes
-
-`0` success · `1` generic · `2` input error · `3` API failure · `4` bad response · `130` interrupted.
 
 ## Backward compat
 
