@@ -90,3 +90,4 @@ Then: `exobrain config-set provider my_api`
 2. **Key must exist.** `exobrain key` to check. Missing → `exobrain init` or `exobrain key-set`.
 3. **Timeout 180s default.** Deep models may need more: `exobrain config-set timeout 300`.
 4. **`--raw` skips system prompt.** Faster, no profile applied.
+# ExoBrain CLI
