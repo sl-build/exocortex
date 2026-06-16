@@ -7,8 +7,6 @@
 
 Exocortex CLI sends prompts to language models (OpenAI, Anthropic, Gemini, DeepSeek, Qwen) via OpenRouter or any custom OpenAI/Anthropic-compatible endpoint and returns the response. Use it as a CLI, an MCP tool, or a Python library.
 
-> **Quick alias:** `brain` is a symlink/wrapper for `exocortex`. Both work identically.
-
 ---
 
 ## Install
@@ -22,6 +20,11 @@ pipx install exocortex-cli
 
 # Or via pip (system-wide, not isolated)
 pip install exocortex-cli
+
+# Or from source
+git clone https://github.com/sl-build/exocortex.git
+cd exocortex
+uv pip install -e .
 ```
 
 Verify: `brain --version` should print `exocortex 0.2.x`.
@@ -31,7 +34,6 @@ Verify: `brain --version` should print `exocortex 0.2.x`.
 You need at least one provider key. The default is **OpenRouter** (one key gives access to 300+ models).
 
 - **OpenRouter**: https://openrouter.ai/keys — format `sk-or-v1-...`
-- **OpenCode Go**: https://opencode.ai/auth — format `sk-...`
 - **Any OpenAI-compatible or Anthropic-compatible endpoint** — your own
 
 ### Run the setup wizard
@@ -106,10 +108,6 @@ cat error.log | brain think "Why did this fail?" --stdin-context
 | `--plan` | Create a structured plan |
 | `--session-id` | Isolate plan state per session |
 
-### Exit Codes
-
-`0` success, `1` generic error, `2` input error, `3` API failure, `4` bad response, `130` interrupted (Ctrl+C).
-
 ---
 
 ## Configuration
@@ -171,38 +169,6 @@ For OpenRouter specifically, the key `OPENROUTER_API_KEY` is also accepted at st
 
 ---
 
-## Python API
-
-```python
-from exocortex import client
-
-response = client.call_and_print(
-    prompt="Explain this code",
-    provider="openrouter",
-    model="openai/gpt-4o",
-    depth="deep",
-    show_stats=True,
-)
-```
-
-For lower-level control, use the adapter layer:
-
-```python
-from exocortex.provider import complete
-
-text, stats = complete(
-    messages=[{"role": "user", "content": "Hello"}],
-    model="qwen3.7-max",
-    provider="opencode_go",
-    max_tokens=256,
-    temperature=0.3,
-)
-print(text)
-print(f"Tokens: {stats.prompt_tokens} + {stats.completion_tokens}")
-```
-
----
-
 ## Troubleshooting
 
 | Problem | Fix |
@@ -213,24 +179,6 @@ print(f"Tokens: {stats.prompt_tokens} + {stats.completion_tokens}")
 | Custom provider not in list | Re-run `brain providers`; check `[providers.<name>]` in `~/.config/exocortex/config.toml` |
 | `brain` not found after install | `uv tool install` puts it in `~/.local/bin/` — add to `PATH` or use full path |
 | Brain wrapper (`brain` script) doesn't load key | Make sure `~/.hermes/profiles/<active>/.env` contains `export <KEY>=...` lines |
-
----
-
-## Install from Source
-
-```bash
-git clone https://github.com/sl-build/exocortex.git
-cd exocortex
-uv pip install -e .
-```
-
-Or without uv:
-
-```bash
-python -m venv .venv
-source .venv/bin/activate
-pip install -e .
-```
 
 ---
 
