@@ -2,7 +2,7 @@
 
 > **Agents:** see [`llms.txt`](llms.txt) for machine-readable setup instructions.
 
-[![PyPI version](https://img.shields.io/pypi/v/exobrain-cli)](https://pypi.org/project/exobrain-cli/)
+[![PyPI version](https://img.shields.io/pypi/v/exobrain-cli.svg?v=1)](https://pypi.org/project/exobrain-cli/)
 [![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
 
 ExoBrain gives your agent a clean context window to think — a dedicated reasoning sidekick that runs a focused prompt without the noise of the main conversation.
