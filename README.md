@@ -100,7 +100,6 @@ cat error.log | exobrain think "Why did this fail?" --stdin-context
 | `exobrain config` | Show current config |
 | `exobrain config-set <key> <value>` | Set `provider`, `model`, or `timeout` |
 | `exobrain think <prompt>` | Send prompt to the reasoning engine |
-| `exobrain plan` / `exobrain plan done` / `exobrain plan block` | Manage structured plans |
 | `exobrain key` | Show API key location |
 | `exobrain key-set <key>` | Save API key |
 | `exobrain profiles` | List reasoning profiles |
