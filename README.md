@@ -5,7 +5,7 @@
 [![PyPI version](https://img.shields.io/pypi/v/exobrain-cli)](https://pypi.org/project/exobrain-cli/)
 [![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
 
-ExoBrain CLI sends prompts to language models (OpenAI, Anthropic, Gemini, DeepSeek, Qwen) via OpenRouter or any custom OpenAI/Anthropic-compatible endpoint and returns the response. Use it as a CLI, an MCP tool, or a Python library.
+ExoBrain gives your agent a clean context window to think — a dedicated reasoning sidekick that runs a focused prompt without the noise of the main conversation.
 
 ---
 
