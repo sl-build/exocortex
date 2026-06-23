@@ -36,10 +36,7 @@ def get_custom_providers() -> dict[str, dict]:
     for name, cfg in custom.items():
         # Map type field to adapter name
         prov_type = cfg.get("type", "openai-compatible")
-        if prov_type == "anthropic-compatible":
-            default_adapter = "reasoning"
-        else:
-            default_adapter = "oa_compat"
+        default_adapter = "reasoning" if prov_type == "anthropic-compatible" else "oa_compat"
         result[name] = {
             "env_var": cfg.get("api_key_env", f"{name.upper()}_API_KEY"),
             "base_url": cfg.get("base_url", ""),

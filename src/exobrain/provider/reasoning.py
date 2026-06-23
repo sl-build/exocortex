@@ -127,7 +127,7 @@ class ReasoningAdapter:
     def supports_model(self, model: str) -> bool:
         from ..keys import get_all_providers
 
-        for provider_name, prov in get_all_providers().items():
+        for _provider_name, prov in get_all_providers().items():
             model_map = prov.get("model_map", {})
             if model in model_map and model_map[model] == "reasoning":
                 return True

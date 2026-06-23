@@ -26,6 +26,9 @@ select = [
     "SIM", # flake8-simplify
     "C4",  # flake8-comprehensions
 ]
+ignore = [
+    "E501", # line too long — multiline strings & f-strings exceed 100
+]
 
 [tool.ruff.format]
 quote-style = "double"

@@ -6,8 +6,12 @@ import json
 
 from .client import call_and_print
 from .config import get_default_model as get_config_model
-from .config import get_max_iterations
-from .config import get_default_provider, load_config, save_config, save_provider_config
+from .config import (
+    get_default_provider,
+    load_config,
+    save_config,
+    save_provider_config,
+)
 from .context import build_context_block
 from .depth import VALID_DEPTHS
 from .errors import InputError
@@ -274,7 +278,7 @@ def cmd_config_set(key: str, value: str) -> None:
 
 def cmd_providers() -> None:
     """List all available providers (built-in + custom)."""
-    all_providers = get_all_providers()
+    get_all_providers()
     custom = get_custom_providers()
 
     # Built-in section
@@ -324,9 +328,9 @@ def cmd_status() -> None:
         if source:
             print(f"  API key:  found in {source}")
         else:
-            print(f"  API key:  found in environment")
+            print("  API key:  found in environment")
     else:
-        print(f"  API key:  NOT FOUND")
+        print("  API key:  NOT FOUND")
 
     # Provider summary
     all_providers = get_all_providers()
@@ -485,13 +489,13 @@ def cmd_init() -> None:
     print()
     print("Testing connection...")
     try:
-        response = call_and_print(
+        call_and_print(
             prompt="Reply with the word OK and nothing else.",
             provider=chosen_provider,
             model=chosen_model,
             max_tokens=128,
         )
-        print(f"✓ Setup complete. Try: exobrain think \"hello\"")
+        print("✓ Setup complete. Try: exobrain think \"hello\"")
     except Exception as e:
         print(f"✗ Connection test failed: {e}")
         print("  Check your API key with: exobrain key")
