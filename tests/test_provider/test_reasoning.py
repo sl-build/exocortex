@@ -121,14 +121,14 @@ class TestReasoningAdapter:
                 base_url="https://opencode.ai/zen/go/v1",
                 api_key="test-key",
             )
-            assert adapter._timeout == 180.0
+            assert adapter._timeout == 350.0
             adapter.complete(
                 messages=[{"role": "user", "content": "hi"}],
                 model="qwen3.7-max",
             )
             mock_client_cls.assert_called_once()
             passed_timeout = mock_client_cls.call_args.kwargs.get("timeout")
-            assert passed_timeout == 180.0, f"expected 180.0, got {passed_timeout}"
+            assert passed_timeout == 350.0, f"expected 350.0, got {passed_timeout}"
 
     def test_connection_error_retries(self):
         """anthropic.APIConnectionError should raise RetryableError and be retried."""

@@ -174,12 +174,12 @@ class TestOACompatAdapter:
             from exobrain.provider.oa_compat import OACompatAdapter
 
             adapter = OACompatAdapter(base_url="https://test.url", api_key="test-key")
-            assert adapter._timeout == 180.0
+            assert adapter._timeout == 350.0
             adapter.complete(
                 messages=[{"role": "user", "content": "hi"}],
                 model="gpt-4o",
             )
-            assert captured["timeout"] == 180.0
+            assert captured["timeout"] == 350.0
 
     def test_connection_error_retries(self):
         """openai.APIConnectionError should raise RetryableError and be retried."""

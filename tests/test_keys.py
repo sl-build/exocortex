@@ -28,7 +28,9 @@ class TestKeyManagement:
         path = set_api_key("sk-test-12345")
         assert path.exists()
 
-    def test_find_key_from_env(self, monkeypatch):
+    def test_find_key_from_env(self, mock_env_files, monkeypatch):
+        monkeypatch.delenv("OPENROUTER_API_KEY", raising=False)
+        monkeypatch.delenv("EXOBRAIN_API_KEY", raising=False)
         monkeypatch.setenv("OPENROUTER_API_KEY", "sk-env-key")
         result = find_key_source()
         assert result is not None

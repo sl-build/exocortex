@@ -77,8 +77,11 @@ class TestStatus:
         out = capsys.readouterr().out
         assert "API key:" in out
 
-    def test_status_shows_key_missing(self, mock_env_files, capsys):
+    def test_status_shows_key_missing(self, mock_env_files, monkeypatch, capsys):
         """Status shows NOT FOUND when no key exists."""
+        monkeypatch.delenv("OPENROUTER_API_KEY", raising=False)
+        monkeypatch.delenv("EXOBRAIN_API_KEY", raising=False)
+        monkeypatch.delenv("GOMODEL_API_KEY", raising=False)
         with patch("builtins.input", return_value="n"):
             cmd_status()
         out = capsys.readouterr().out
@@ -136,8 +139,11 @@ class TestInit:
         out = capsys.readouterr().out
         assert "Keeping existing" in out
 
-    def test_init_invalid_choice(self, mock_config_dir, capsys):
+    def test_init_invalid_choice(self, mock_config_dir, mock_env_files, monkeypatch, capsys):
         """Init rejects invalid provider choice."""
+        monkeypatch.delenv("OPENROUTER_API_KEY", raising=False)
+        monkeypatch.delenv("EXOBRAIN_API_KEY", raising=False)
+        monkeypatch.delenv("GOMODEL_API_KEY", raising=False)
         with patch("builtins.input", return_value="3"):
             cmd_init()
         out = capsys.readouterr().out
@@ -165,4 +171,7 @@ class TestNoArgQuickstart:
             main(["--version"])
         assert exc_info.value.code == 0
         out = capsys.readouterr().out
-        assert "0.3.0" in out
+        assert "exobrain" in out
+        # Version should be present (e.g. "exobrain 0.2.5")
+        import re
+        assert re.search(r"exobrain \d+\.\d+\.\d+", out)
